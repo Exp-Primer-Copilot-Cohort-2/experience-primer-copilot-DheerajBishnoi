@@ -1,60 +1,24 @@
 // create web server
 var http = require('http');
 var fs = require('fs');
-var path = require('path');
-var mime = require('mime');
+var url = require('url');
 
-var cache = {};
+// create server
+http.createServer(function(request, response) {
+    var pathname = url.parse(request.url).pathname;
+    console.log("Request for " + pathname + " received.");
 
-var server = http.createServer(function(request, response) {
-    var filePath = false;
-    if (request.url == '/') {
-        filePath = 'public/index.html';
-    } else {
-        filePath = 'public' + request.url;
-    }
-    var absPath = './' + filePath;
-    serverStatic(response, cache, absPath);
-});
+    // read file
+    fs.readFile(pathname.substr(1), function(err, data) {
+        if (err) {
+            console.log(err);
+            response.writeHead(404, {'Content-Type': 'text/html'});
+        } else {
+            response.writeHead(200, {'Content-Type': 'text/html'});
+            response.write(data.toString());
+        }
+        response.end();
+    });
+}).listen(8081);
 
-server.listen(3000, function() {
-    console.log('Server listening on port 3000');
-});
-
-var chatServer = require('./lib/chat_server');
-chatServer.listen(server);
-
-// handle 404
-function send404(response) {
-    response.writeHead(404, {'Content-Type': 'text/plain'});
-    response.write('Error 404: resource not found.');
-    response.end();
-}
-
-// handle 200
-function sendFile(response, filePath, fileContents) {
-    response.writeHead(200, {'Content-Type': mime.lookup(path.basename(filePath))});
-    response.end(fileContents);
-}
-
-// check cache
-function serverStatic(response, cache, absPath) {
-    if (cache[absPath]) {
-        sendFile(response, absPath, cache[absPath]);
-    } else {
-        fs.exists(absPath, function(exists) {
-            if (exists) {
-                fs.readFile(absPath, function(err, data) {
-                    if (err) {
-                        send404(response);
-                    } else {
-                        cache[absPath] = data;
-                        sendFile(response, absPath, data);
-                    }
-                });
-            } else {
-                send404(response);
-            }
-        });
-    }
-}
+console.log('Server running at http://
