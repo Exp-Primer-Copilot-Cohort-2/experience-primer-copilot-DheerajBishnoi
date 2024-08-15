@@ -39,8 +39,9 @@ app.post('/api/comments', function(req, res){
   Comment.create(req.body, function(err, comments){
     if(err){
       console.log(err);
+      res.status(500).json({ error: 'Internal Server Error' });
     }else{
-      res.json(comments);
+      res.status(200).json({});
     }
   });
 });
