@@ -1,22 +1,50 @@
-// create web server
-const express = require('express');
-const app = express();
-// use body parser to parse json data
-const bodyParser = require('body-parser');
+//create web server
+//use express
+var express = require('express');
+var app = express();
+
+//use body parser
+var bodyParser = require('body-parser');
 app.use(bodyParser.json());
-// create array to store comments
-const comments = [];
-// get request to get comments
-app.get('/comments', (req, res) => {
-    res.send(comments);
+app.use(bodyParser.urlencoded({extended: true}));
+
+//use mongoose
+var mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost/comment');
+
+//create schema
+var commentSchema = new mongoose.Schema({
+  name: String,
+  comment: String
 });
-// post request to add a comment
-app.post('/comments', (req, res) => {
-    const comment = req.body;
-    comments.push(comment);
-    res.send('Comment added');
+
+var Comment = mongoose.model('Comment', commentSchema);
+
+//create route
+app.get('/', function(req, res){
+  res.sendFile(__dirname + '/index.html');
 });
-// start server
-app.listen(3000, () => {
-    console.log('Server started');
+
+app.get('/api/comments', function(req, res){
+  Comment.find(function(err, comments){
+    if(err){
+      console.log(err);
+    }else{
+      res.json(comments);
+    }
+  });
+});
+
+app.post('/api/comments', function(req, res){
+  Comment.create(req.body, function(err, comments){
+    if(err){
+      console.log(err);
+    }else{
+      res.json(comments);
+    }
+  });
+});
+
+app.listen(3000, function(){
+  console.log('Server is running on port 3000');
 });
