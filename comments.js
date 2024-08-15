@@ -1,24 +1,22 @@
 // create web server
-var http = require('http');
-var fs = require('fs');
-var url = require('url');
-
-// create server
-http.createServer(function(request, response) {
-    var pathname = url.parse(request.url).pathname;
-    console.log("Request for " + pathname + " received.");
-
-    // read file
-    fs.readFile(pathname.substr(1), function(err, data) {
-        if (err) {
-            console.log(err);
-            response.writeHead(404, {'Content-Type': 'text/html'});
-        } else {
-            response.writeHead(200, {'Content-Type': 'text/html'});
-            response.write(data.toString());
-        }
-        response.end();
-    });
-}).listen(8081);
-
-console.log('Server running at http://
+const express = require('express');
+const app = express();
+// use body parser to parse json data
+const bodyParser = require('body-parser');
+app.use(bodyParser.json());
+// create array to store comments
+const comments = [];
+// get request to get comments
+app.get('/comments', (req, res) => {
+    res.send(comments);
+});
+// post request to add a comment
+app.post('/comments', (req, res) => {
+    const comment = req.body;
+    comments.push(comment);
+    res.send('Comment added');
+});
+// start server
+app.listen(3000, () => {
+    console.log('Server started');
+});
